@@ -1,0 +1,30 @@
+name: ml3
+channels:
+  - pytorch
+  - defaults
+  - conda-forge
+dependencies:
+  - cython
+  - freetype
+  - graphviz
+  - ipython
+  - jupyter
+  - jupyterlab
+  - matplotlib
+  - nodejs
+  - numpy
+  - pandas
+  - python=3.8.6
+  - scikit-learn
+  - scipy
+  - tqdm
+  - pip
+  - pip:
+    - torchviz
+    - nbmerge
+    - gym
+    - atari-py
+    - box2d-py
+    # There's no conda package for this version yet.
+    - https://github.com/explosion/spacy-models/releases/download/de_core_news_sm-2.3.0/de_core_news_sm-2.3.0.tar.gz
+

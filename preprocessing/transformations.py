@@ -7,7 +7,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import FunctionTransformer
 
-import globals
+from preprocessing.constants import label_categories
 
 
 def split_data(df):
@@ -35,10 +35,11 @@ def fix_data_types(X):
 
 
 def fix_label_type(y):
-    convert_label_dict = {
-        'TestResultsCode': pd.CategoricalDtype(categories=globals.label_categories)
-    }
-    y = y.astype(convert_label_dict)
+    splitted = y['TestResultsCode'].str.rsplit('_', n=2,expand=True)
+    y['Virus'] = splitted[0]
+    y['Spreader'] = splitted[1]
+    y['AtRisk'] = splitted[2]
+    y = y.drop(labels=['TestResultsCode'], axis=1)
     return y
 
 
