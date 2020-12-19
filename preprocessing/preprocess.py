@@ -8,58 +8,39 @@ from preprocessing.feature_selection import select_features_filter, select_featu
 from preprocessing.visualize import display_correlation_matrix, save_scatter_plots, plot_df_scatter
 from sklearn.pipeline import Pipeline
 
+class DataPreprocessor:
 
+    def __init__(self):
+        self.data_preperation_pipelines = Pipeline([
+            ('feature_types', features_data_types_pipeline),
+            ('feature_imputation', Imputer()),
+            ('outlier_clipping', OutlierClipper(features=continous_features)),
+            ('normalization', Normalizer())
+        ])
 
-def load_data(filename):
-    # Load Dataset
-    df = pd.read_csv(filename)
+    def fit(self, X, y, **kwargs):
 
-    return df
+        X_tag = X.drop(labels=['PatientID', *bad_features], axis=1)
+
+        self.data_preperation_pipelines.fit(X_tag, y)
+
+        return self
     
+    def transform(self, X, **kwargs):
+        patient_ids = X['PatientID']
+        X_tag = X.drop(labels=['PatientID', *bad_features], axis=1)
+
+        X_transformed =  self.data_preperation_pipelines.transform(X_tag)
+
+        X_transformed = pd.concat([patient_ids, X_transformed], axis=1)
+        X_transformed = X_transformed[final_features]
+        return X_transformed
+
+    def fit_transform(self, X, y, **kwargs):
+        self.fit(X, y, **kwargs)
+        return self.transform(X)
+
 def split(df):
-    df = df.drop(labels=bad_features, axis=1)
     X_train, X_val, X_test, y_train, y_val, y_test = split_data(df)
     
     return X_train, X_val, X_test, y_train, y_val, y_test
-    
-def prepare_data(X_train, X_val, X_test, y_train, y_val, y_test):
-    
-    patient_ids = X_train['PatientID'], X_val['PatientID'], X_test['PatientID']
-    X_train, X_val, X_test = X_train.drop(labels=['PatientID'], axis=1), X_val.drop(labels=['PatientID'], axis=1), X_test.drop(labels=['PatientID'], axis=1)
-    # Prepare Dataset
-    data_preperation_pipelines = Pipeline([
-        ('feature_types', features_data_types_pipeline),
-        ('feature_imputation', Imputer()),
-        ('outlier_clipping', OutlierClipper(features=continous_features)),
-        ('normalization', Normalizer())
-    ])
-    data_preperation_pipelines.fit(X_train, y_train)
-    label_transformer.fit(y_train)
-    X_train_prepared, y_train_prepared = data_preperation_pipelines.transform(X_train), label_transformer.transform(
-        y_train)
-    X_validation_prepared, y_validation_prepared = data_preperation_pipelines.transform(
-        X_val), label_transformer.transform(y_val)
-    X_test_prepared, y_test_prepared = data_preperation_pipelines.transform(X_test), label_transformer.transform(y_test)
-
-    X_train_prepared, X_validation_prepared, X_test_prepared = pd.concat([patient_ids[0], X_train_prepared], axis=1), pd.concat([patient_ids[1], X_validation_prepared], axis=1), pd.concat([patient_ids[2], X_test_prepared], axis=1)
-
-    
-    return X_train_prepared, X_validation_prepared, X_test_prepared,\
-           y_train_prepared, y_validation_prepared, y_test_prepared
-
-
-def save_selected_features(original_list, final_list):
-    df = pd.DataFrame([1 if feature in final_list else 0 for feature in original_list], index=original_list)
-    
-    df.T.to_csv('selected_columns.csv')
-    
-def preprocess(X_train, X_val, X_test, y_train, y_val, y_test):
-    
-    X_train_prepared, X_validation_prepared, X_test_prepared,\
-    y_train_prepared, y_validation_prepared, y_test_prepared = prepare_data(X_train, X_val, X_test, y_train, y_val, y_test)
-    
-    X_train_final, X_validation_final, X_test_final = X_train_prepared[final_features], X_validation_prepared[final_features], X_test_prepared[final_features]
-
-    return X_train_final, X_validation_final, X_test_final, y_train_prepared, y_validation_prepared, y_test_prepared
-
-    
